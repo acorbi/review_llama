@@ -10,7 +10,7 @@ utc=pytz.UTC
 
 # Configuration
 GITHUB_PERSONAL_ACCESS_TOKEN = os.environ['GITHUB_PERSONAL_ACCESS_TOKEN']
-OLLAMA_ENDPOINT = "http://" + os.environ['OLLAMA_ENDPOINT'] if os.environ['OLLAMA_ENDPOINT'] else "http://localhost:11434/api/generate"
+OLLAMA_ENDPOINT = os.environ.get('OLLAMA_ENDPOINT', "http://localhost:11434/api/generate")
 LABEL = os.environ.get('LABEL', 'review-llama')
 POLLING_FREQ_MINUTES = int(os.environ.get('POLLING_FREQ_MINUTES', 10))
 LOG_FILE = os.environ.get('LOG_FILE', None)
@@ -22,6 +22,7 @@ auth = Auth.Token(GITHUB_PERSONAL_ACCESS_TOKEN)
 g = Github(auth=auth)
 
 review_requested = False
+last_check_time = datetime.now().astimezone(pytz.utc)
 
 def log_action(func_name, *args, **kwargs):
     """Log function calls with timestamp."""
@@ -44,8 +45,7 @@ def get_new_pull_requests():
         log_action('found_repo', repo=repo.name)
         pulls = repo.get_pulls(state='open', sort='created', direction='desc')
         for pull in pulls:
-
-            is_new_pr = pull.created_at > utc.localize(datetime.now())
+            is_new_pr = pull.created_at.astimezone(pytz.utc) > last_check_time
             if is_new_pr:
                 log_action('found_pull_requests', pull=pull.number, created_at= (pull.created_at))
                 new_pulls.append(pull)
