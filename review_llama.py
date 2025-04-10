@@ -21,7 +21,6 @@ auth = Auth.Token(GITHUB_PERSONAL_ACCESS_TOKEN)
 # GitHub API setup
 g = Github(auth=auth)
 
-review_requested = False
 last_check_time = datetime.now().astimezone(pytz.utc)
 
 def log_action(func_name, *args, **kwargs):
@@ -69,17 +68,11 @@ def get_diff(pull):
     response = requests.get(pull.diff_url, headers=headers)
     diff = response.text
     log_action('diff_found', diff=diff)
-    # Log the diff content
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    diff_filename = f"diff_pr_{pull.number}_{timestamp.replace(' ', '_').replace(':', '')}.txt"
-    with open(diff_filename, 'w') as f:
-        f.write(diff)
     return diff
 
 def send_to_ollama(diff):
     """Send the diff to the Ollama endpoint."""
     log_action('send_to_ollama', diff_length=len(diff))
-    review_requested = True
     headers = {'Content-Type': 'application/json'}
     data = {
         'model': 'llama3.1:8b',
@@ -97,11 +90,10 @@ def post_comment(pull, summary):
 {summary}
 """
     pull.create_review(body=comment, event='REQUEST_CHANGES')
-    save_reviewed_pr(pull.number)
 def main():
     log_action('main')
     
-    while review_requested is False:
+    while True:
         new_pulls = get_new_pull_requests()
         for pull in new_pulls:
             if has_label(pull, LABEL):

@@ -25,3 +25,4 @@ The behavior of the script can be configured with the environmental variables:
 
 https://github.com/open-steps/website_v3/pull/5 - Typo introduced
 https://github.com/open-steps/website_v3/pull/6 - Bad indentation introduced
+https://github.com/acorbi/sovereign/pull/1 - Bad practices and bugs
