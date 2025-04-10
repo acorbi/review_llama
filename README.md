@@ -1,8 +1,8 @@
 # Review Llama
 
-A python script which fetches a diff from a PR, sends it to an ollama endpoint asking for a concise review which is then posted on the pull request as a review comment.
+A python script which fetches a diff from a PR, sends it to an Ollama endpoint asking for a concise review which is then posted on the pull request as a review comment.
 
-The script only picks newly created pull-requests that are tagged with a specific label. Looks into all the repositories the user specified by the token has access to.
+The script only picks newly created pull-requests that are tagged with a specific label. Looks into all the repositories the user (authenticated by the token) has access to.
 
 # Configuration
 
@@ -20,3 +20,8 @@ The behavior of the script can be configured with the environmental variables:
 - pyGithub
 - python-requests
 - pytz
+
+# Examples on test Pull requests
+
+https://github.com/open-steps/website_v3/pull/5 - Typo introduced
+https://github.com/open-steps/website_v3/pull/6 - Bad indentation introduced
