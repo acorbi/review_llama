@@ -8,14 +8,12 @@ import pytz
 
 utc=pytz.UTC
 
-# Environment variables
+# Configuration
 GITHUB_PERSONAL_ACCESS_TOKEN = os.environ['GITHUB_PERSONAL_ACCESS_TOKEN']
-OLLAMA_ENDPOINT = "http://localhost:11434/api/generate"
-LABEL = "ai-review"
-POLLING_FREQ_MINUTES = 10
-LOG_FILE = "review_llama.log"
-ENABLED_REPOSITORIES = [""]
-REVIEWED_PRS_FILE = "/tmp/reviewed_prs.txt"
+OLLAMA_ENDPOINT = "http://" + os.environ['OLLAMA_ENDPOINT'] if os.environ['OLLAMA_ENDPOINT'] else "http://localhost:11434/api/generate"
+LABEL = os.environ.get('LABEL', 'review-llama')
+POLLING_FREQ_MINUTES = int(os.environ.get('POLLING_FREQ_MINUTES', 10))
+LOG_FILE = os.environ.get('LOG_FILE', None)
 
 # Authentication is defined via github.Auth
 # using an access token
@@ -25,28 +23,12 @@ g = Github(auth=auth)
 
 review_requested = False
 
-# File to store reviewed PRs
-
-def load_reviewed_prs():
-    """Load the list of already reviewed PRs from file."""
-    try:
-        with open(REVIEWED_PRS_FILE, 'r') as f:
-            return set(line.strip() for line in f.readlines())
-    except FileNotFoundError:
-        return set()
-
-def save_reviewed_pr(pull_number):
-    """Save a PR ID to the reviewed PRs file."""
-    with open(REVIEWED_PRS_FILE, 'a') as f:
-        f.write(f"{pull_number}\n")
-
-def is_pr_reviewed(pull_number):
-    """Check if a PR has already been reviewed."""
-    reviewed_prs = load_reviewed_prs()
-    return str(pull_number) in reviewed_prs
-
 def log_action(func_name, *args, **kwargs):
     """Log function calls with timestamp."""
+
+    if not LOG_FILE:
+        return
+
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(LOG_FILE, 'a') as f:
         f.write(f"[{timestamp}] Called {func_name} with args: {args}, kwargs: {kwargs}\n")
@@ -58,15 +40,10 @@ def get_new_pull_requests():
     
     # Get all repositories the authenticated user has access to
     for repo in g.get_user().get_repos():
-        # Skip if repository is not in enabled list
-        if repo.name not in ENABLED_REPOSITORIES:
-            continue
 
         log_action('found_repo', repo=repo.name)
         pulls = repo.get_pulls(state='open', sort='created', direction='desc')
         for pull in pulls:
-            if is_pr_reviewed(pull.number):
-                continue
 
             is_new_pr = pull.created_at > utc.localize(datetime.now())
             if is_new_pr:
