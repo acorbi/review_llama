@@ -89,7 +89,7 @@ def post_comment(pull, summary):
     comment = f"""
 {summary}
 """
-    pull.create_review(body=comment, event='REQUEST_CHANGES')
+    pull.create_review(body=comment, event='COMMENT')
 def main():
     log_action('main')
     
