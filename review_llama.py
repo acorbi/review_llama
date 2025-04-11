@@ -44,7 +44,7 @@ def get_new_pull_requests():
         log_action('found_repo', repo=repo.name)
         pulls = repo.get_pulls(state='open', sort='created', direction='desc')
         for pull in pulls:
-            is_new_pr = pull.created_at.astimezone(pytz.utc) > last_check_time
+            is_new_pr = pull.created_at.astimezone(pytz.utc) > get_last_check_time()
             if is_new_pr:
                 log_action('found_pull_requests', pull=pull.number, created_at= (pull.created_at))
                 new_pulls.append(pull)
@@ -90,6 +90,19 @@ def post_comment(pull, summary):
 {summary}
 """
     pull.create_review(body=comment, event='COMMENT')
+
+def get_last_check_time():
+    """Get the last check time."""
+    log_action('get_last_check_time')
+    return last_check_time
+
+
+def update_last_check_time():
+    """Update the last check time."""
+    global last_check_time
+    log_action('update_last_check_time')
+    last_check_time = datetime.now().astimezone(pytz.utc)
+
 def main():
     log_action('main')
     
@@ -100,6 +113,7 @@ def main():
                 diff = get_diff(pull)
                 summary = send_to_ollama(diff)
                 post_comment(pull, summary)
+        update_last_check_time()
         time.sleep(POLLING_FREQ_MINUTES * 60) 
 
 if __name__ == '__main__':
