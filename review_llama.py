@@ -63,10 +63,12 @@ def has_label(pull, label):
 
 def get_diff(pull):
     """Get the diff of a pull request."""
-    log_action('get_diff', pull=pull.number, diff_url=pull.diff_url)
-    headers = {'Authorization': f'token {GITHUB_PERSONAL_ACCESS_TOKEN}'}
-    response = requests.get(pull.diff_url, headers=headers)
-    diff = response.text
+    log_action('get_diff', pull=pull.number)
+    files = pull.get_files()
+    diff = ''
+    for file in files:
+        patch = file.patch
+        diff += patch + '\n\n'
     log_action('diff_found', diff=diff)
     return diff
 
