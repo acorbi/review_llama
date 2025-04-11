@@ -77,7 +77,7 @@ def send_to_ollama(diff):
     data = {
         'model': 'llama3.1:8b',
         'stream': False,
-        'prompt': f'Review the following diff and provide a concise summary (max 100 words) of possible bugs introduced, whether the code complies with standard coding practices, and suggest improvements. Use natural, not too technical language. focus on the code, not the language.Omit the introductory text "here is the summary" and just provide the summary:\n\n{diff}'
+        'prompt': f'Review the following diff and provide a concise summary (max 400 words) of possible bugs introduced, whether the code complies with standard coding practices, and suggest improvements. Use natural, not too technical language. Focus on the code, not the strings found within it. Use markdown to format the review. Omit the introductory text "here is the summary" and just provide the summary:\n\n{diff}'
     }
     response = requests.post(OLLAMA_ENDPOINT, headers=headers, json=data)
     log_action('ollama_response', response=response.json()['response'])
