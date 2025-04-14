@@ -1,2 +1,9 @@
 venv/
 *.log
+*.swp
+*.pyc
+*.pyo
+*.pyd
+*.pyw
+*.pyz
+*.pywz
