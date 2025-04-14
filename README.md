@@ -1,4 +1,4 @@
-# Review Llama
+# Review Llama :llama: 
 
 A python script which fetches a diff from a PR, sends it to an Ollama endpoint asking for a concise review which is then posted on the pull request as a review comment.
 
