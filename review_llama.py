@@ -15,6 +15,9 @@ LABEL = os.environ.get('LABEL', 'review-llama')
 POLLING_FREQ_MINUTES = int(os.environ.get('POLLING_FREQ_MINUTES', 10))
 LOG_FILE = os.environ.get('LOG_FILE', None)
 
+# Store reviewed PRs to avoid duplicate reviews
+reviewed_prs = set()
+
 # Authentication is defined via github.Auth
 # using an access token
 auth = Auth.Token(GITHUB_PERSONAL_ACCESS_TOKEN)
@@ -34,7 +37,7 @@ def log(msg):
         f.write(f"[{timestamp}] {msg}\n")
 
 def get_new_pull_requests():
-    """Get new pull requests from all repositories since the last check."""
+    """Get new pull requests from all repositories since the last check which have not been reviewed yet."""
     log('Fetching new pull requests')
     new_pulls = []
     
@@ -45,7 +48,7 @@ def get_new_pull_requests():
         pulls = repo.get_pulls(state='open', sort='created', direction='desc')
         for pull in pulls:
             is_new_pr = pull.created_at.astimezone(pytz.utc) > last_check_time
-            if is_new_pr:
+            if is_new_pr and pull.number not in reviewed_prs:
                 log(f'Found new pull request: {pull.number} created at: {pull.created_at}')
                 new_pulls.append(pull)
     
@@ -91,7 +94,7 @@ def post_comment(pull, summary):
 {summary}
 """
     pull.create_review(body=comment, event='COMMENT')
-
+    reviewed_prs.add(pull.number)
 def update_last_check_time():
     """Update the last check time."""
     global last_check_time
