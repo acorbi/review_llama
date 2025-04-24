@@ -74,14 +74,14 @@ def get_diff(pull):
     log(f'Diff found for pull request: {pull.number}')
     return diff
 
-def send_to_ollama(diff):
-    """Send the diff to the Ollama endpoint."""
-    log('Sending diff to Ollama, awaiting response...')
+def send_to_ollama(diff, description):
+    """Send the diff and description to the Ollama endpoint."""
+    log('Sending diff and description to Ollama, awaiting response...')
     headers = {'Content-Type': 'application/json'}
     data = {
         'model': 'llama3.1:8b',
         'stream': False,
-        'prompt': f'Review the following diff and provide a concise summary (max 400 words) of possible bugs introduced, whether the code complies with standard coding practices, and suggest improvements. Use natural, not too technical language. Focus on the code, not the strings found within it. Use markdown to format the review. Omit the introductory text "here is the summary" and just provide the summary:\n\n{diff}'
+        'prompt': f'Review the following pull request diff taking in consideration the description provided on the PR. Provide a concise summary (max 400 words) of possible bugs introduced, whether the code complies with standard coding practices, and suggest improvements. Use natural, not too technical language. Focus on the code, not the strings found within it. Use markdown to format the review. Omit the introductory text "here is the summary" and just provide the summary:\n\nDescription:\n{description}\n\nDiff:\n{diff}'
     }
     response = requests.post(OLLAMA_ENDPOINT, headers=headers, json=data)
     log(f'Ollama response received: {response.json()["response"]}')
@@ -108,7 +108,8 @@ def main():
         for pull in new_pulls:
             if has_label(pull, LABEL):
                 diff = get_diff(pull)
-                summary = send_to_ollama(diff)
+                description = pull.body or "No description provided."
+                summary = send_to_ollama(diff, description)
                 post_comment(pull, summary)
         time.sleep(POLLING_FREQ_MINUTES * 60) 
 
