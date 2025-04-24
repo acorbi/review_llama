@@ -74,14 +74,24 @@ def get_diff(pull):
     log(f'Diff found for pull request: {pull.number}')
     return diff
 
+def extract_llama_input(description):
+    """Extract the string following the 🦙 emoji in the description."""
+    if '🦙' in description:
+        return description.split('🦙', 1)[1].strip()
+    return None
+
+# Update the send_to_ollama function to include the additional input
 def send_to_ollama(diff, description):
     """Send the diff and description to the Ollama endpoint."""
     log('Sending diff and description to Ollama, awaiting response...')
+    llama_input = extract_llama_input(description)
+    additional_input = f"\nAdditional Input:\n{llama_input}" if llama_input else ""
+    
     headers = {'Content-Type': 'application/json'}
     data = {
         'model': 'llama3.1:8b',
         'stream': False,
-        'prompt': f'Review the following pull request diff taking in consideration the description provided on the PR. Provide a concise summary (max 400 words) of possible bugs introduced, whether the code complies with standard coding practices, and suggest improvements. Use natural, not too technical language. Focus on the code, not the strings found within it. Use markdown to format the review. Omit the introductory text "here is the summary" and just provide the summary:\n\nDescription:\n{description}\n\nDiff:\n{diff}'
+        'prompt': f'Review the following pull request diff taking in consideration the description provided on the PR. Provide a concise summary (max 400 words) of possible bugs introduced, whether the code complies with standard coding practices, and suggest improvements. Use natural, not too technical language. Focus on the code, not the strings found within it. Use markdown to format the review. Omit the introductory text "here is the summary" and just provide the summary:\n\nDescription:\n{description}{additional_input}\n\nDiff:\n{diff}'
     }
     response = requests.post(OLLAMA_ENDPOINT, headers=headers, json=data)
     log(f'Ollama response received: {response.json()["response"]}')
