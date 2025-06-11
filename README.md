@@ -1,5 +1,7 @@
 # Review Llama :llama: 
 
+![review_llama](https://github.com/user-attachments/assets/16a199a4-cdc7-4247-a152-05789722027c)
+
 A python script which fetches a diff from a PR, sends it to an Ollama endpoint asking for a concise review which is then posted on the pull request as a review comment.
 
 The script only picks newly created pull-requests that are tagged with a specific label. Looks into all the repositories the user (authenticated by the token) has access to.
